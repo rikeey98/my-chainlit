@@ -117,6 +117,8 @@ AI가 대화 중에 직접 파일 시스템을 조작할 수 있습니다. Funct
 |------|------|------|
 | 📂 디렉토리 조회 | 디렉토리 내용 확인 | "C:\Users 디렉토리를 보여줘" |
 | 📄 파일 읽기 | 텍스트 파일 내용 읽기 | "test.txt 파일 내용을 읽어줘" |
+| 📚 여러 파일 읽기 | 여러 파일을 한번에 읽기 (최대 50개) | "app.py, utils.py, config.py 파일들을 읽어줘" |
+| 🔍 파일 검색 | 패턴으로 파일 검색 | "이 디렉토리에서 모든 .py 파일을 찾아줘" |
 | ✍️ 파일 쓰기 | 새 파일 생성 또는 덮어쓰기 | "hello.txt 파일에 'Hello World'를 써줘" |
 | 🔄 파일 수정 | 파일 내용 검색/바꾸기 | "config.txt에서 'old'를 'new'로 바꿔줘" |
 | 📂 디렉토리 생성 | 새 디렉토리 생성 | "C:\Projects\new-project 폴더를 만들어줘" |
@@ -175,6 +177,44 @@ AI: [write_file 도구 실행]
 AI: [read_file 도구 실행]
     [update_file 도구 실행]
     파일이 성공적으로 수정되었습니다!
+```
+
+#### 예시 4: 여러 파일 한번에 읽기
+```
+사용자: app.py, config.py, utils.py 파일을 모두 읽어줘
+AI: [read_multiple_files 도구 실행]
+    3개 파일을 읽었습니다:
+
+    📄 app.py (152줄, 4.2KB)
+    [파일 내용...]
+
+    📄 config.py (48줄, 1.1KB)
+    [파일 내용...]
+
+    📄 utils.py (89줄, 2.8KB)
+    [파일 내용...]
+```
+
+#### 예시 5: 파일 검색
+```
+사용자: 이 프로젝트에서 모든 Python 파일을 찾아줘
+AI: [search_files 도구 실행]
+    15개의 .py 파일을 찾았습니다:
+    - app.py (4.2KB)
+    - config.py (1.1KB)
+    - utils.py (2.8KB)
+    - tests/test_app.py (3.5KB)
+    ...
+```
+
+#### 예시 6: 검색 후 읽기 (복합 작업)
+```
+사용자: src 폴더에서 test로 시작하는 모든 Python 파일을 찾아서 읽어줘
+AI: [search_files 도구 실행 - pattern="test*.py", directory="src"]
+    3개의 파일을 찾았습니다.
+
+    [read_multiple_files 도구 실행]
+    모든 테스트 파일을 읽었습니다...
 ```
 
 ### 지원 모델

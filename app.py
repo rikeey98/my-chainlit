@@ -50,6 +50,10 @@ async def execute_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, A
             return fs_tools.move_item(**arguments)
         elif tool_name == "delete_item":
             return fs_tools.delete_item(**arguments)
+        elif tool_name == "read_multiple_files":
+            return fs_tools.read_multiple_files(**arguments)
+        elif tool_name == "search_files":
+            return fs_tools.search_files(**arguments)
         else:
             return {"success": False, "error": f"Unknown tool: {tool_name}"}
     except Exception as e:
@@ -82,6 +86,8 @@ async def start():
         welcome_msg += "\n**사용 가능한 파일 시스템 기능**:\n"
         welcome_msg += "- 📁 디렉토리 조회\n"
         welcome_msg += "- 📄 파일 읽기/쓰기/수정\n"
+        welcome_msg += "- 📚 여러 파일 한번에 읽기\n"
+        welcome_msg += "- 🔍 파일 검색 (패턴 매칭)\n"
         welcome_msg += "- 📂 디렉토리 생성\n"
         welcome_msg += "- 📋 파일 복사/이동\n"
         welcome_msg += "- ℹ️ 파일 정보 조회\n"
@@ -89,7 +95,10 @@ async def start():
         welcome_msg += "\n**파일 시스템 MCP**: ❌ Disabled\n"
 
     welcome_msg += "\n무엇을 도와드릴까요?"
-    welcome_msg += "\n\n💡 예시: 'C:\\Users 디렉토리를 보여줘' 또는 '내 바탕화면에 test.txt 파일을 만들어줘'"
+    welcome_msg += "\n\n💡 예시:\n"
+    welcome_msg += "- 'C:\\Users 디렉토리를 보여줘'\n"
+    welcome_msg += "- '이 프로젝트의 모든 Python 파일을 찾아줘'\n"
+    welcome_msg += "- 'app.py, config.py, utils.py 파일을 한번에 읽어줘'"
 
     await cl.Message(content=welcome_msg).send()
 

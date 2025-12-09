@@ -166,6 +166,112 @@ class FileSystemTools:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    def read_multiple_files(self, paths: List[str], encoding: str = "utf-8",
+                           max_size_mb: int = 10) -> Dict[str, Any]:
+        """
+        여러 파일을 한번에 읽기
+
+        Args:
+            paths: 읽을 파일 경로 리스트
+            encoding: 파일 인코딩
+            max_size_mb: 파일당 최대 크기 (MB)
+
+        Returns:
+            각 파일의 내용 및 메타데이터
+        """
+        try:
+            if not paths:
+                return {"success": False, "error": "No paths provided"}
+
+            if len(paths) > 50:
+                return {
+                    "success": False,
+                    "error": f"Too many files requested: {len(paths)} (max: 50)"
+                }
+
+            results = []
+            success_count = 0
+            failed_count = 0
+
+            for path in paths:
+                result = self.read_file(path, encoding, max_size_mb)
+                if result.get("success"):
+                    success_count += 1
+                else:
+                    failed_count += 1
+                results.append({
+                    "path": path,
+                    "result": result
+                })
+
+            return {
+                "success": True,
+                "total_files": len(paths),
+                "successful": success_count,
+                "failed": failed_count,
+                "files": results
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def search_files(self, directory: str, pattern: str = "*",
+                    recursive: bool = True, max_files: int = 100) -> Dict[str, Any]:
+        """
+        디렉토리에서 파일 검색
+
+        Args:
+            directory: 검색할 디렉토리
+            pattern: 파일 패턴 (예: "*.txt", "*.py")
+            recursive: 하위 디렉토리 포함
+            max_files: 최대 결과 개수
+
+        Returns:
+            검색된 파일 목록
+        """
+        try:
+            if not self._is_path_allowed(directory):
+                return {"success": False, "error": "Access denied"}
+
+            dir_obj = Path(directory)
+            if not dir_obj.exists():
+                return {"success": False, "error": f"Directory does not exist: {directory}"}
+
+            if not dir_obj.is_dir():
+                return {"success": False, "error": f"Not a directory: {directory}"}
+
+            # 파일 검색
+            if recursive:
+                files = list(dir_obj.rglob(pattern))[:max_files]
+            else:
+                files = list(dir_obj.glob(pattern))[:max_files]
+
+            # 파일만 필터링
+            files = [f for f in files if f.is_file()]
+
+            file_list = []
+            for file in files:
+                stat = file.stat()
+                file_list.append({
+                    "path": str(file),
+                    "name": file.name,
+                    "size": stat.st_size,
+                    "size_formatted": self._format_size(stat.st_size),
+                    "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                })
+
+            return {
+                "success": True,
+                "directory": str(dir_obj.resolve()),
+                "pattern": pattern,
+                "recursive": recursive,
+                "total_found": len(file_list),
+                "files": file_list
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def write_file(self, path: str, content: str, encoding: str = "utf-8",
                    create_dirs: bool = True, overwrite: bool = False) -> Dict[str, Any]:
         """
@@ -630,6 +736,57 @@ class FileSystemTools:
                         }
                     },
                     "required": ["source", "destination"]
+                }
+            },
+            {
+                "name": "read_multiple_files",
+                "description": "여러 파일을 한번에 읽습니다. 최대 50개 파일까지 가능합니다.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "paths": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "읽을 파일 경로 목록 (최대 50개)"
+                        },
+                        "encoding": {
+                            "type": "string",
+                            "description": "파일 인코딩 (기본값: utf-8)",
+                            "default": "utf-8"
+                        }
+                    },
+                    "required": ["paths"]
+                }
+            },
+            {
+                "name": "search_files",
+                "description": "디렉토리에서 파일을 검색합니다. 파일 패턴(예: *.txt, *.py)으로 검색할 수 있습니다.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "directory": {
+                            "type": "string",
+                            "description": "검색할 디렉토리 경로"
+                        },
+                        "pattern": {
+                            "type": "string",
+                            "description": "파일 패턴 (예: '*.txt', '*.py', 'test_*.py')",
+                            "default": "*"
+                        },
+                        "recursive": {
+                            "type": "boolean",
+                            "description": "하위 디렉토리 포함 여부",
+                            "default": True
+                        },
+                        "max_files": {
+                            "type": "integer",
+                            "description": "최대 결과 개수",
+                            "default": 100
+                        }
+                    },
+                    "required": ["directory"]
                 }
             }
         ]
