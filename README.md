@@ -1,6 +1,6 @@
-# 🤖 LLM Chat Web Application
+# 🤖 LLM Chat Web Application with Local Filesystem MCP
 
-Chainlit을 사용한 OpenAI Compatible API 기반 채팅 웹 애플리케이션입니다. MCP(Model Context Protocol) 서버 통합을 지원합니다.
+Chainlit을 사용한 OpenAI Compatible API 기반 채팅 웹 애플리케이션입니다. 로컬 파일 시스템을 제어할 수 있는 MCP(Model Context Protocol) 도구가 내장되어 있습니다.
 
 ## ✨ 주요 기능
 
@@ -10,7 +10,12 @@ Chainlit을 사용한 OpenAI Compatible API 기반 채팅 웹 애플리케이션
   - LM Studio, Ollama, LocalAI
   - vLLM, Text Generation WebUI
   - 기타 OpenAI API 호환 서비스
-- 🛠️ **MCP 통합**: Model Context Protocol을 통한 컨텍스트 강화 및 도구 사용
+- 📁 **로컬 파일 시스템 MCP**: AI가 직접 파일과 디렉토리를 관리
+  - 📂 디렉토리 탐색 및 조회
+  - 📄 파일 읽기/쓰기/수정
+  - 📋 파일 복사/이동
+  - ℹ️ 파일 정보 조회
+  - 🔒 안전 모드 및 경로 제한 지원
 - 🎨 **깔끔한 UI**: Chainlit 기반의 직관적인 사용자 인터페이스
 - 📝 **대화 히스토리**: 세션별 대화 내용 자동 관리
 
@@ -52,9 +57,14 @@ OPENAI_API_BASE=http://localhost:8000/v1  # API 엔드포인트
 OPENAI_API_KEY=your-api-key-here           # API 키 (필요한 경우)
 MODEL_NAME=gpt-3.5-turbo                   # 사용할 모델 이름
 
-# MCP 서버 설정 (선택사항)
-MCP_SERVER_ENABLED=false                   # MCP 사용 여부
-MCP_SERVER_URL=http://localhost:3000       # MCP 서버 URL
+# 로컬 파일 시스템 MCP 설정
+FILESYSTEM_MCP_ENABLED=true                # 파일 시스템 MCP 활성화
+FILESYSTEM_SAFE_MODE=true                  # 안전 모드 (삭제 작업 비활성화)
+FILESYSTEM_ALLOWED_PATHS=                  # 허용된 경로 (비워두면 모든 경로)
+
+# 외부 MCP 서버 설정 (선택사항)
+MCP_SERVER_ENABLED=false                   # 외부 MCP 사용 여부
+MCP_SERVER_URL=http://localhost:3000       # 외부 MCP 서버 URL
 ```
 
 ### 3. 애플리케이션 실행
@@ -95,6 +105,87 @@ chainlit run app.py -w
 
 브라우저에서 http://localhost:8000 으로 접속합니다.
 
+## 📁 로컬 파일 시스템 MCP 사용하기
+
+### 기능 개요
+
+AI가 대화 중에 직접 파일 시스템을 조작할 수 있습니다. Function Calling을 지원하는 모델이 필요합니다.
+
+### 지원하는 작업
+
+| 기능 | 설명 | 예시 |
+|------|------|------|
+| 📂 디렉토리 조회 | 디렉토리 내용 확인 | "C:\Users 디렉토리를 보여줘" |
+| 📄 파일 읽기 | 텍스트 파일 내용 읽기 | "test.txt 파일 내용을 읽어줘" |
+| ✍️ 파일 쓰기 | 새 파일 생성 또는 덮어쓰기 | "hello.txt 파일에 'Hello World'를 써줘" |
+| 🔄 파일 수정 | 파일 내용 검색/바꾸기 | "config.txt에서 'old'를 'new'로 바꿔줘" |
+| 📂 디렉토리 생성 | 새 디렉토리 생성 | "C:\Projects\new-project 폴더를 만들어줘" |
+| 📋 파일 복사 | 파일/디렉토리 복사 | "test.txt를 backup.txt로 복사해줘" |
+| 🔀 파일 이동 | 파일/디렉토리 이동/이름변경 | "old.txt를 new.txt로 이름 바꿔줘" |
+| ℹ️ 파일 정보 | 파일 메타데이터 조회 | "README.md 파일 정보를 알려줘" |
+
+### 안전 설정
+
+#### 1. 안전 모드
+```bash
+FILESYSTEM_SAFE_MODE=true  # 삭제 작업 비활성화
+```
+
+안전 모드를 켜면 파일/디렉토리 삭제가 불가능합니다 (기본값: true).
+
+#### 2. 경로 제한
+
+특정 경로만 접근을 허용할 수 있습니다:
+
+**Windows 예시:**
+```bash
+FILESYSTEM_ALLOWED_PATHS=C:\Users\username\Documents,C:\Projects
+```
+
+**Linux/macOS 예시:**
+```bash
+FILESYSTEM_ALLOWED_PATHS=/home/username/documents,/home/username/projects
+```
+
+비워두면 모든 경로에 접근 가능합니다.
+
+### 사용 예시
+
+#### 예시 1: 디렉토리 탐색
+```
+사용자: C:\Users\username 디렉토리를 보여줘
+AI: [list_directory 도구 실행]
+    디렉토리에 다음 항목들이 있습니다:
+    - Documents (디렉토리)
+    - Downloads (디렉토리)
+    - Desktop (디렉토리)
+    ...
+```
+
+#### 예시 2: 파일 생성
+```
+사용자: 바탕화면에 todo.txt 파일을 만들고 "오늘 할 일: 코딩하기"를 써줘
+AI: [write_file 도구 실행]
+    todo.txt 파일이 생성되었습니다!
+```
+
+#### 예시 3: 파일 읽기 및 수정
+```
+사용자: config.json 파일을 읽고, "port": 8080을 "port": 3000으로 바꿔줘
+AI: [read_file 도구 실행]
+    [update_file 도구 실행]
+    파일이 성공적으로 수정되었습니다!
+```
+
+### 지원 모델
+
+Function Calling을 지원하는 모델이 필요합니다:
+- ✅ OpenAI GPT-3.5-turbo, GPT-4, GPT-4-turbo
+- ✅ Anthropic Claude 3 (Opus, Sonnet, Haiku)
+- ✅ Function calling을 지원하는 기타 모델
+
+지원하지 않는 모델의 경우 `.env`에서 `FILESYSTEM_MCP_ENABLED=false`로 설정하세요.
+
 ## 🔧 OpenAI Compatible API 설정 예시
 
 ### Ollama
@@ -129,11 +220,11 @@ OPENAI_API_KEY=your-azure-key
 MODEL_NAME=gpt-35-turbo
 ```
 
-## 🛠️ MCP (Model Context Protocol) 사용하기
+## 🛠️ 외부 MCP 서버 사용하기 (선택사항)
 
-MCP를 사용하면 LLM에 추가 컨텍스트와 도구를 제공할 수 있습니다.
+위의 로컬 파일 시스템 MCP와 별개로, 외부 MCP 서버를 사용할 수도 있습니다.
 
-### MCP 서버 예시 실행
+### 외부 MCP 서버 예시 실행
 
 프로젝트에 포함된 예시 MCP 서버를 실행할 수 있습니다:
 
@@ -175,8 +266,9 @@ MCP_SERVER_URL=http://localhost:3000
 ```
 my-chainlit/
 ├── app.py                    # 메인 Chainlit 애플리케이션
-├── mcp_tools.py              # MCP 클라이언트 및 로컬 도구
-├── mcp_server_example.py     # MCP 서버 예시 구현
+├── filesystem_tools.py       # 로컬 파일 시스템 MCP 도구
+├── mcp_tools.py              # MCP 클라이언트 유틸리티
+├── mcp_server_example.py     # 외부 MCP 서버 예시 구현
 ├── chainlit.md               # 채팅 시작 화면
 ├── config.toml               # Chainlit 설정
 ├── requirements.txt          # Python 의존성
@@ -184,9 +276,9 @@ my-chainlit/
 ├── .gitignore                # Git 제외 파일
 ├── start.py                  # 크로스 플랫폼 실행 스크립트 (권장)
 ├── run.sh                    # Linux/macOS 실행 스크립트
-├── run_with_mcp.sh           # Linux/macOS MCP 포함 실행 스크립트
+├── run_with_mcp.sh           # Linux/macOS 외부 MCP 포함 실행 스크립트
 ├── run.bat                   # Windows 실행 스크립트
-├── run_with_mcp.bat          # Windows MCP 포함 실행 스크립트
+├── run_with_mcp.bat          # Windows 외부 MCP 포함 실행 스크립트
 └── README.md                 # 이 파일
 ```
 
