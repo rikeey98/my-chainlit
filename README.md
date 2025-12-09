@@ -59,6 +59,34 @@ MCP_SERVER_URL=http://localhost:3000       # MCP 서버 URL
 
 ### 3. 애플리케이션 실행
 
+#### 방법 1: 크로스 플랫폼 Python 스크립트 (권장)
+
+**기본 실행:**
+```bash
+python start.py
+```
+
+**MCP 서버와 함께 실행:**
+```bash
+python start.py --with-mcp
+```
+
+#### 방법 2: 플랫폼별 스크립트
+
+**Linux/macOS:**
+```bash
+./run.sh                    # 기본 실행
+./run_with_mcp.sh           # MCP와 함께 실행
+```
+
+**Windows:**
+```cmd
+run.bat                     # 기본 실행
+run_with_mcp.bat            # MCP와 함께 실행
+```
+
+#### 방법 3: 직접 실행
+
 ```bash
 chainlit run app.py -w
 ```
@@ -153,7 +181,12 @@ my-chainlit/
 ├── config.toml               # Chainlit 설정
 ├── requirements.txt          # Python 의존성
 ├── .env.example              # 환경 변수 예시
-├── .gitignore               # Git 제외 파일
+├── .gitignore                # Git 제외 파일
+├── start.py                  # 크로스 플랫폼 실행 스크립트 (권장)
+├── run.sh                    # Linux/macOS 실행 스크립트
+├── run_with_mcp.sh           # Linux/macOS MCP 포함 실행 스크립트
+├── run.bat                   # Windows 실행 스크립트
+├── run_with_mcp.bat          # Windows MCP 포함 실행 스크립트
 └── README.md                 # 이 파일
 ```
 
@@ -220,6 +253,22 @@ pip install --upgrade pip
 # 개별 패키지 설치
 pip install chainlit openai python-dotenv
 ```
+
+### Windows 관련 문제
+
+**Python이 PATH에 없는 경우:**
+- Python 설치 시 "Add Python to PATH" 옵션을 선택하거나
+- 수동으로 환경 변수에 Python 경로 추가
+
+**실행 권한 문제:**
+- PowerShell에서 실행 시 권한 오류가 발생하면:
+  ```powershell
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  ```
+
+**포트 충돌:**
+- 8000번 포트가 이미 사용 중이면 다른 애플리케이션을 종료하거나
+- `chainlit run app.py -w --port 8001`로 다른 포트 사용
 
 ## 🎨 커스터마이징
 
